@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/SlyMarbo/rss"
-	"github.com/didsqq/news_feed_bot/internal/models"
+	"github.com/didsqq/news_feed_bot/internal/model"
 	"github.com/samber/lo"
 )
 
@@ -15,7 +15,7 @@ type RSSSource struct {
 	SourceName string
 }
 
-func NewRSSSourceFromModel(m models.Source) RSSSource {
+func NewRSSSourceFromModel(m model.Source) RSSSource {
 	return RSSSource{
 		URL:        m.FeedURL,
 		SourceID:   m.ID,
@@ -23,14 +23,14 @@ func NewRSSSourceFromModel(m models.Source) RSSSource {
 	}
 }
 
-func (s RSSSource) Fetch(ctx context.Context) ([]models.Item, error) {
+func (s RSSSource) Fetch(ctx context.Context) ([]model.Item, error) {
 	feed, err := s.loadFeed(ctx, s.URL)
 	if err != nil {
 		return nil, err
 	}
 
-	return lo.Map(feed.Items, func(item *rss.Item, _ int) models.Item {
-		return models.Item{
+	return lo.Map(feed.Items, func(item *rss.Item, _ int) model.Item {
+		return model.Item{
 			Title:      item.Title,
 			Categories: item.Categories,
 			Link:       item.Link,
@@ -39,6 +39,14 @@ func (s RSSSource) Fetch(ctx context.Context) ([]models.Item, error) {
 			Summary:    strings.TrimSpace(item.Summary),
 		}
 	}), nil
+}
+
+func (s RSSSource) ID() int64 {
+	return s.SourceID
+}
+
+func (s RSSSource) Name() string {
+	return s.SourceName
 }
 
 func (s RSSSource) loadFeed(ctx context.Context, url string) (*rss.Feed, error) {
