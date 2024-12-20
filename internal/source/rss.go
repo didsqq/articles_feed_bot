@@ -49,7 +49,7 @@ func (s RSSSource) Name() string {
 	return s.SourceName
 }
 
-func (s RSSSource) loadFeed(ctx context.Context, url string) (*rss.Feed, error) {
+func (s RSSSource) loadFeed(ctx context.Context, url string) (*rss.Feed, error) { // загружаем rss.Feed для конкретной url
 	var (
 		feedCh = make(chan *rss.Feed)
 		errCh  = make(chan error)
