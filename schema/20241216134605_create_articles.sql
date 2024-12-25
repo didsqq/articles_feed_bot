@@ -2,12 +2,12 @@
 -- +goose StatementBegin
 CREATE TABLE articles (
     id SERIAL PRIMARY KEY,
-    source_id INT NOT NULL,
+    source_id INT REFERENCES sources(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
-    link VARCHAR(255) NOT NULL,
+    link VARCHAR(255) NOT NULL UNIQUE,
     summary TEXT NOT NULL,
     published_at TIMESTAMP NOT NULL,
-    created_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     posted_at TIMESTAMP
 );
 -- +goose StatementEnd

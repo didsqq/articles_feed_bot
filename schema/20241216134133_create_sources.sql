@@ -5,7 +5,7 @@ CREATE TABLE sources (
     name TEXT NOT NULL,
     feed_url TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    priority INT NOT NULL
 );
 -- +goose StatementEnd
 
