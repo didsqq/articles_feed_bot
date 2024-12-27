@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/sashabaranov/go-openai"
 )
@@ -13,14 +14,16 @@ import (
 type OpenAISummarizer struct {
 	client  *openai.Client
 	prompt  string
+	model   string
 	enabled bool
 	mu      sync.Mutex
 }
 
-func NewOpenAISummarizer(apiKey string, prompt string) *OpenAISummarizer {
+func NewOpenAISummarizer(apiKey, model, prompt string) *OpenAISummarizer {
 	s := &OpenAISummarizer{
 		client: openai.NewClient(apiKey),
 		prompt: prompt,
+		model:  model,
 	}
 
 	if apiKey != "" {
@@ -32,7 +35,7 @@ func NewOpenAISummarizer(apiKey string, prompt string) *OpenAISummarizer {
 	return s
 }
 
-func (s *OpenAISummarizer) Summarize(ctx context.Context, text string) (string, error) {
+func (s *OpenAISummarizer) Summarize(text string) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -41,7 +44,7 @@ func (s *OpenAISummarizer) Summarize(ctx context.Context, text string) (string, 
 	}
 
 	request := openai.ChatCompletionRequest{
-		Model: "gpt-3.5-turbo",
+		Model: s.model,
 		Messages: []openai.ChatCompletionMessage{
 			{
 				Role:    openai.ChatMessageRoleSystem,
@@ -49,9 +52,12 @@ func (s *OpenAISummarizer) Summarize(ctx context.Context, text string) (string, 
 			},
 		},
 		MaxTokens:   256,
-		Temperature: 0.7,
+		Temperature: 1,
 		TopP:        1,
 	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
 
 	resp, err := s.client.CreateChatCompletion(ctx, request)
 	if err != nil {

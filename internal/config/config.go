@@ -17,8 +17,8 @@ type Config struct {
 	NotificationInterval time.Duration `hcl:"notification_interval" env:"NOTIFICATION_INTERVAL" default:"1m"`
 	FilterKeywords       []string      `hcl:"filter_keywords" env:"FILTER_kEYWORDS"`
 	OpenAIKey            string        `hcl:"openai_key" env:"OPENAI_KEY"`
-	OpenAIPromзt         string        `hcl:"openai_prompt" env:"OPENAI_PROMPT"`
-	OpenAШModel          string        `hcl:"openai_model" env:"OPENAI_MODEL" default:"gpt-3.5-turbo"`
+	OpenAIPrompt         string        `hcl:"openai_prompt" env:"OPENAI_PROMPT"`
+	OpenAIModel          string        `hcl:"openai_model" env:"OPENAI_MODEL" default:"gpt-3.5-turbo"`
 }
 
 var (
