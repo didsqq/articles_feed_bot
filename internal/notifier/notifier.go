@@ -53,6 +53,7 @@ func New(
 }
 
 func (n *Notifier) Start(ctx context.Context) error {
+	log.Print("[INFO] notifier start")
 	ticker := time.NewTicker(n.sendInterval)
 	defer ticker.Stop()
 
@@ -73,12 +74,16 @@ func (n *Notifier) Start(ctx context.Context) error {
 }
 
 func (n *Notifier) SelectAndSendArticle(ctx context.Context) error {
-	topOneArticles, err := n.articles.AllNotPosted(ctx, time.Now().Add(-n.lookupTimeWindow), 1)
+	log.Printf("[INFO] time.Now().Add(-(n.lookupTimeWindow * 100)): %v", time.Now().Add(-(n.lookupTimeWindow * 150)))
+	topOneArticles, err := n.articles.AllNotPosted(ctx, time.Now().Add(-(n.lookupTimeWindow * 150)), 1)
 	if err != nil {
 		return err
 	}
 
+	log.Printf("[INFO] SelectAndSendArticle tick: %v", topOneArticles)
+
 	if len(topOneArticles) == 0 {
+		log.Print("[INFO] len(topOneArticles) == 0")
 		return nil
 	}
 

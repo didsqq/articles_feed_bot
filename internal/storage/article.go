@@ -2,6 +2,8 @@ package storage
 
 import (
 	"context"
+	"database/sql"
+	"log"
 	"time"
 
 	"github.com/didsqq/news_feed_bot/internal/model"
@@ -10,15 +12,15 @@ import (
 )
 
 type dbArticleWithPriority struct {
-	ID             int64     `db:"a_id"`
-	SourcePriority int64     `db:"s_priority"`
-	SourceID       int64     `db:"s_id"`
-	Title          string    `db:"a_title"`
-	Link           string    `db:"a_link"`
-	Summary        string    `db:"a_summary"`
-	PublishedAt    time.Time `db:"a_published_at"`
-	PostedAt       time.Time `db:"a_created_at"`
-	CreatedAt      time.Time `db:"a_posted_at"`
+	ID             int64        `db:"a_id"`
+	SourcePriority int64        `db:"s_priority"`
+	SourceID       int64        `db:"s_id"`
+	Title          string       `db:"a_title"`
+	Link           string       `db:"a_link"`
+	Summary        string       `db:"a_summary"`
+	PublishedAt    time.Time    `db:"a_published_at"`
+	PostedAt       sql.NullTime `db:"a_posted_at"`
+	CreatedAt      time.Time    `db:"a_created_at"`
 }
 
 type ArticlePostgresStorage struct {
@@ -39,7 +41,7 @@ func (s *ArticlePostgresStorage) Store(ctx context.Context, article model.Articl
 	if _, err := conn.ExecContext(
 		ctx,
 		`INSERT INTO articles (source_id, title, link, summary, published_at) 
-			VALUES ($1, $2, $3, $4, %5) 
+			VALUES ($1, $2, $3, $4, $5) 
 			ON CONFLICT DO NOTHING;`,
 		article.SourceID,
 		article.Title,
@@ -83,6 +85,7 @@ func (s *ArticlePostgresStorage) AllNotPosted(ctx context.Context, since time.Ti
 	); err != nil {
 		return nil, err
 	}
+	log.Printf("[INFO] articles %v", articles)
 
 	return lo.Map(articles, func(article dbArticleWithPriority, _ int) model.Article {
 		return model.Article{

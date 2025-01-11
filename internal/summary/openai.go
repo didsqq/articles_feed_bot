@@ -30,7 +30,7 @@ func NewOpenAISummarizer(apiKey, model, prompt string) *OpenAISummarizer {
 		s.enabled = true
 	}
 
-	log.Printf("openai summarizer enabled: %v", s.enabled)
+	log.Printf("openai summarizer is enabled: %v", s.enabled)
 
 	return s
 }
@@ -40,7 +40,7 @@ func (s *OpenAISummarizer) Summarize(text string) (string, error) {
 	defer s.mu.Unlock()
 
 	if !s.enabled {
-		return "", nil
+		return "", fmt.Errorf("openai summarizer is disabled")
 	}
 
 	request := openai.ChatCompletionRequest{
