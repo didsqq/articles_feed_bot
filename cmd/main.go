@@ -61,6 +61,7 @@ func main() {
 
 	newsBot := botkit.New(botAPI)
 	newsBot.RegisterCmdView("start", bot.ViewCmdStart())
+	newsBot.RegisterCmdView("addsource", bot.ViewCmdAddSource(sourceStorage))
 
 	mux := http.NewServeMux() // создает обработчик путей
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
@@ -73,7 +74,7 @@ func main() {
 	go func(ctx context.Context) {
 		if err := fetcher.Start(ctx); err != nil {
 			if !errors.Is(err, context.Canceled) {
-				log.Printf("failed to start fetcher: %v", err) // если проблема не связана с завершением контекста
+				log.Printf("[ERROR] failed to start fetcher: %v", err) // если проблема не связана с завершением контекста
 				return
 			}
 			log.Printf("[INFO] fetcher stopped")
@@ -90,15 +91,15 @@ func main() {
 		}
 	}(ctx)
 
-	// go func(ctx context.Context) {
-	// if err := http.ListenAndServe("9.0.0.0:8080", mux); err != nil { // запускает http-сервер, слушает порт 8080, использует маршрутизатор mux
-	// 	if !errors.Is(err, context.Canceled) {
-	// 		log.Printf("[ERROR] failed to run http server: %v", err)
-	// 		return
-	// 	}
-	// 	log.Printf("[INFO] http server stopped")
-	// }
-	// }(ctx)
+	go func(ctx context.Context) {
+		if err := http.ListenAndServe("9.0.0.0:8080", mux); err != nil { // запускает http-сервер, слушает порт 8080, использует маршрутизатор mux
+			if !errors.Is(err, context.Canceled) {
+				log.Printf("[ERROR] failed to run http server: %v", err)
+				return
+			}
+			log.Printf("[INFO] http server stopped")
+		}
+	}(ctx)
 
 	if err := newsBot.Run(ctx); err != nil {
 		log.Printf("[ERROR] failed to run botkit: %v", err)
