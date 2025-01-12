@@ -3,7 +3,6 @@ package storage
 import (
 	"context"
 	"database/sql"
-	"log"
 	"time"
 
 	"github.com/didsqq/news_feed_bot/internal/model"
@@ -85,7 +84,6 @@ func (s *ArticlePostgresStorage) AllNotPosted(ctx context.Context, since time.Ti
 	); err != nil {
 		return nil, err
 	}
-	log.Printf("[INFO] articles %v", articles)
 
 	return lo.Map(articles, func(article dbArticleWithPriority, _ int) model.Article {
 		return model.Article{

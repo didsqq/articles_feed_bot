@@ -9,11 +9,11 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-type SourceStorage interface {
+type SourceStorageAdd interface {
 	Add(ctx context.Context, source model.Source) (int64, error)
 }
 
-func ViewCmdAddSource(storage SourceStorage) botkit.ViewFunc {
+func ViewCmdAddSource(storage SourceStorageAdd) botkit.ViewFunc {
 	type addSourceArgs struct {
 		Name     string `json:"name"`
 		URL      string `json:"url"`
@@ -34,7 +34,6 @@ func ViewCmdAddSource(storage SourceStorage) botkit.ViewFunc {
 
 		sourceID, err := storage.Add(ctx, source)
 		if err != nil {
-			//send err msg
 			return err
 		}
 

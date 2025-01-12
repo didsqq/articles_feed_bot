@@ -62,6 +62,7 @@ func main() {
 	newsBot := botkit.New(botAPI)
 	newsBot.RegisterCmdView("start", bot.ViewCmdStart())
 	newsBot.RegisterCmdView("addsource", bot.ViewCmdAddSource(sourceStorage))
+	newsBot.RegisterCmdView("deletesource", bot.ViewCmdDeleteSource(sourceStorage))
 
 	mux := http.NewServeMux() // создает обработчик путей
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {

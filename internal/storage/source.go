@@ -103,7 +103,7 @@ func (s *SourcePostgresStorage) Delete(ctx context.Context, id int64) error {
 	}
 	defer conn.Close()
 
-	if _, err := conn.ExecContext(ctx, `DELETE FROM sources WHRE id = $1`, id); err != nil {
+	if _, err := conn.ExecContext(ctx, `DELETE FROM sources WHERE id = $1;`, id); err != nil {
 		return err
 	}
 
