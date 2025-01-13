@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -36,6 +35,7 @@ func main() {
 	defer db.Close()
 
 	var (
+		userStorage    = storage.NewUserStorage(db)
 		articleStorage = storage.NewArticleStorage(db)
 		sourceStorage  = storage.NewSourceStorage(db)
 		fetcher        = fetcher.New(
@@ -54,7 +54,7 @@ func main() {
 			summarizer,
 			botAPI,
 			config.Get().NotificationInterval,
-			2*config.Get().FetchInterval,
+			5*config.Get().FetchInterval,
 			config.Get().TelegramChannelID,
 		)
 	)
@@ -65,10 +65,9 @@ func main() {
 	newsBot.RegisterCmdView("list", bot.ViewCmdListSources(sourceStorage))
 	newsBot.RegisterCmdView("deletesource", bot.ViewCmdDeleteSource(sourceStorage))
 
-	mux := http.NewServeMux() // создает обработчик путей
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK) // путь для проверки, что сервер работает
-	})
+	newsBot.RegisterCmdView("addkeys", bot.ViewCmdAddKeywords(userStorage))
+	newsBot.RegisterCmdView("getkeys", bot.ViewCmdGetKeywords(userStorage))
+	newsBot.RegisterCmdView("delete", bot.ViewCmdDeleteKeywords(userStorage))
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
@@ -76,7 +75,7 @@ func main() {
 	go func(ctx context.Context) {
 		if err := fetcher.Start(ctx); err != nil {
 			if !errors.Is(err, context.Canceled) {
-				log.Printf("[ERROR] failed to start fetcher: %v", err) // если проблема не связана с завершением контекста
+				log.Printf("[ERROR] failed to start fetcher: %v", err)
 				return
 			}
 			log.Printf("[INFO] fetcher stopped")
@@ -90,16 +89,6 @@ func main() {
 				return
 			}
 			log.Printf("[INFO] notifier stopped")
-		}
-	}(ctx)
-
-	go func(ctx context.Context) {
-		if err := http.ListenAndServe("9.0.0.0:8080", mux); err != nil { // запускает http-сервер, слушает порт 8080, использует маршрутизатор mux
-			if !errors.Is(err, context.Canceled) {
-				log.Printf("[ERROR] failed to run http server: %v", err)
-				return
-			}
-			log.Printf("[INFO] http server stopped")
 		}
 	}(ctx)
 

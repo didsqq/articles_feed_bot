@@ -84,7 +84,6 @@ func (s *ArticlePostgresStorage) AllNotPosted(ctx context.Context, since time.Ti
 	); err != nil {
 		return nil, err
 	}
-
 	return lo.Map(articles, func(article dbArticleWithPriority, _ int) model.Article {
 		return model.Article{
 			ID:          article.ID,

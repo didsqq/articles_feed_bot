@@ -74,13 +74,10 @@ func (n *Notifier) Start(ctx context.Context) error {
 }
 
 func (n *Notifier) SelectAndSendArticle(ctx context.Context) error {
-	// log.Printf("[INFO] time.Now().Add(-(n.lookupTimeWindow * 100)): %v", time.Now().Add(-(n.lookupTimeWindow * 150)))
-	topOneArticles, err := n.articles.AllNotPosted(ctx, time.Now().Add(-(n.lookupTimeWindow * 150)), 1)
+	topOneArticles, err := n.articles.AllNotPosted(ctx, time.Now().Add(-(n.lookupTimeWindow)), 2)
 	if err != nil {
 		return err
 	}
-
-	// log.Printf("[INFO] SelectAndSendArticle tick: %v", topOneArticles)
 
 	if len(topOneArticles) == 0 {
 		return nil
