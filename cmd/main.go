@@ -51,6 +51,7 @@ func main() {
 		)
 		notifier = notifier.New(
 			articleStorage,
+			userStorage,
 			summarizer,
 			botAPI,
 			config.Get().NotificationInterval,
@@ -60,7 +61,7 @@ func main() {
 	)
 
 	newsBot := botkit.New(botAPI)
-	newsBot.RegisterCmdView("start", bot.ViewCmdStart())
+	newsBot.RegisterCmdView("start", bot.ViewCmdStart(userStorage))
 	newsBot.RegisterCmdView("addsource", bot.ViewCmdAddSource(sourceStorage))
 	newsBot.RegisterCmdView("list", bot.ViewCmdListSources(sourceStorage))
 	newsBot.RegisterCmdView("deletesource", bot.ViewCmdDeleteSource(sourceStorage))

@@ -50,8 +50,26 @@ func (s *UserPostgresStorage) Add(ctx context.Context, user model.User) error {
 	}
 	defer conn.Close()
 
-	if _, err := conn.ExecContext(ctx, `INSERT INTO users (chat_id, keywords) VALUES ($1, $2)`,
-		user.ChatID, strings.Join(user.Keywords, ";")); err != nil {
+	if _, err := conn.ExecContext(ctx, `INSERT INTO users (chat_id, keywords) VALUES ($1, $2)`, user.ChatID, ""); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *UserPostgresStorage) AddKeywords(ctx context.Context, user model.User) error {
+	conn, err := s.db.Connx(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	for i, keyword := range user.Keywords {
+		user.Keywords[i] = strings.ToLower(keyword)
+	}
+
+	if _, err := conn.ExecContext(ctx, `UPDATE users keywords = $1 WHERE chat_id = $2`,
+		strings.Join(user.Keywords, ";"), user.ChatID); err != nil {
 		return err
 	}
 

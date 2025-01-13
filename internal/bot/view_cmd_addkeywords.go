@@ -10,11 +10,11 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-type UsersAddStorage interface {
-	Add(ctx context.Context, user model.User) error
+type UsersAddKeyStorage interface {
+	AddKeywords(ctx context.Context, user model.User) error
 }
 
-func ViewCmdAddKeywords(storage UsersAddStorage) botkit.ViewFunc {
+func ViewCmdAddKeywords(storage UsersAddKeyStorage) botkit.ViewFunc {
 
 	return func(ctx context.Context, bot *tgbotapi.BotAPI, update tgbotapi.Update) error {
 		keyWords := update.Message.CommandArguments()
@@ -27,7 +27,7 @@ func ViewCmdAddKeywords(storage UsersAddStorage) botkit.ViewFunc {
 			Keywords: strings.Split(keyWords, " "),
 		}
 
-		err := storage.Add(ctx, user)
+		err := storage.AddKeywords(ctx, user)
 		if err != nil {
 			return err
 		}

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/didsqq/news_feed_bot/internal/botkit/markup"
@@ -25,8 +26,13 @@ type Summarizer interface {
 	Summarize(text string) (string, error)
 }
 
+type UsersProvider interface {
+	GetAll(ctx context.Context) ([]model.User, error)
+}
+
 type Notifier struct {
 	articles         ArticleProvider
+	users            UsersProvider
 	summarizer       Summarizer
 	bot              *tgbotapi.BotAPI
 	sendInterval     time.Duration
@@ -36,6 +42,7 @@ type Notifier struct {
 
 func New(
 	articleProvider ArticleProvider,
+	users UsersProvider,
 	summarizer Summarizer,
 	bot *tgbotapi.BotAPI,
 	sendInterval time.Duration,
@@ -44,6 +51,7 @@ func New(
 ) *Notifier {
 	return &Notifier{
 		articles:         articleProvider,
+		users:            users,
 		summarizer:       summarizer,
 		bot:              bot,
 		sendInterval:     sendInterval,
@@ -90,8 +98,33 @@ func (n *Notifier) SelectAndSendArticle(ctx context.Context) error {
 		log.Printf("[ERROR] failed to extract summary: %v", err)
 	}
 
-	if err := n.sendArticle(article, summary); err != nil {
-		return err
+	users, err := n.users.GetAll(ctx)
+	if err != nil {
+		log.Printf("[ERROR] failed to get users: %v", err)
+	}
+
+	var errCh = make(chan error)
+	var wg sync.WaitGroup
+
+	for _, user := range users {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			err := n.sendArticle(user, article, summary)
+			if err != nil {
+				errCh <- err
+				return
+			}
+		}()
+	}
+
+	go func() {
+		wg.Wait()
+		close(errCh)
+	}()
+
+	for err := range errCh {
+		log.Printf("[ERROR] Ошибка при отправке article пользователю:%v", err)
 	}
 
 	return n.articles.MarkAsPosted(ctx, article)
@@ -131,20 +164,42 @@ func cleanupText(text string) string {
 	return redundantNewLines.ReplaceAllString(text, "\n")
 }
 
-func (n *Notifier) sendArticle(article model.Article, summary string) error {
-	const msgFormat = "*%s*%s\n\n%s"
+func (n *Notifier) sendArticle(user model.User, article model.Article, summary string) error {
+	approach := false
+	if user.Keywords[0] != "" {
+		for _, keyword := range user.Keywords {
+			if strings.Contains(strings.ToLower(summary), keyword) || strings.Contains(strings.ToLower(article.Title), keyword) {
+				approach = true
+				break
+			}
+		}
+	} else {
+		approach = true
+	}
 
-	msg := tgbotapi.NewMessage(n.channelID, fmt.Sprintf(
-		msgFormat,
-		markup.EscapeForMarkdown(article.Title),
-		markup.EscapeForMarkdown(summary),
-		markup.EscapeForMarkdown(article.Link),
-	))
-	msg.ParseMode = "MarkdownV2"
+	if approach {
+		const msgFormat = "*%s*%s\n\n%s"
 
-	_, err := n.bot.Send(msg)
-	if err != nil {
-		return err
+		msg := tgbotapi.NewMessage(user.ChatID, fmt.Sprintf(
+			msgFormat,
+			markup.EscapeForMarkdown(article.Title),
+			markup.EscapeForMarkdown(summary),
+			markup.EscapeForMarkdown(article.Link),
+		))
+		msg.ParseMode = "MarkdownV2"
+
+		_, err := n.bot.Send(msg)
+		if err != nil {
+			return err
+		}
+	} else {
+		msg := tgbotapi.NewMessage(user.ChatID, "[Тестово]эта статья вам не подошла")
+		msg.ParseMode = "MarkdownV2"
+
+		_, err := n.bot.Send(msg)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

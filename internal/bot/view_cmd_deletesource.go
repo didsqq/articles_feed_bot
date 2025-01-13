@@ -3,6 +3,7 @@ package bot
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/didsqq/news_feed_bot/internal/botkit"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -13,17 +14,16 @@ type SourceStorageDelete interface {
 }
 
 func ViewCmdDeleteSource(storage SourceStorageDelete) botkit.ViewFunc {
-	type deleteSourceArgs struct {
-		Id int64 `json:"id"`
-	}
 
 	return func(ctx context.Context, bot *tgbotapi.BotAPI, update tgbotapi.Update) error {
-		res, err := botkit.ParseJSON[deleteSourceArgs](update.Message.CommandArguments())
+		idStr := update.Message.CommandArguments()
+
+		id, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil {
 			return err
 		}
 
-		err = storage.Delete(ctx, res.Id)
+		err = storage.Delete(ctx, id)
 		if err != nil {
 			return err
 		}
@@ -31,7 +31,7 @@ func ViewCmdDeleteSource(storage SourceStorageDelete) botkit.ViewFunc {
 		var (
 			msgText = fmt.Sprintf(
 				"Источник удален с ID: '%d'\\.",
-				res.Id,
+				id,
 			)
 			reply = tgbotapi.NewMessage(update.Message.Chat.ID, msgText)
 		)

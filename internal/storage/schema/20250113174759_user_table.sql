@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE users(
     id SERIAL PRIMARY KEY,
-    chat_id INT UNIQUE,
+    chat_id BIGINT UNIQUE,
     keywords VARCHAR(255)
 );
 -- +goose StatementEnd
