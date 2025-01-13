@@ -164,36 +164,38 @@ func cleanupText(text string) string {
 	return redundantNewLines.ReplaceAllString(text, "\n")
 }
 
-func (n *Notifier) sendArticle(user model.User, article model.Article, summary string) error {
-	approach := false
+func (n *Notifier) filterKeywords(user model.User, article model.Article, summary string) bool {
 	if user.Keywords[0] != "" {
 		for _, keyword := range user.Keywords {
 			if strings.Contains(strings.ToLower(summary), keyword) || strings.Contains(strings.ToLower(article.Title), keyword) {
-				approach = true
-				break
+				return true
 			}
 		}
 	} else {
-		approach = true
+		return true
 	}
+	return false
+}
+
+func (n *Notifier) sendArticle(user model.User, article model.Article, summary string) error {
+	approach := n.filterKeywords(user, article, summary)
 	var msg tgbotapi.MessageConfig
 	if approach {
 		const msgFormat = "*%s*%s\n\n%s"
-
 		msg = tgbotapi.NewMessage(user.ChatID, fmt.Sprintf(
 			msgFormat,
 			markup.EscapeForMarkdown(article.Title),
 			markup.EscapeForMarkdown(summary),
 			markup.EscapeForMarkdown(article.Link),
 		))
-
 	} else {
 		msg = tgbotapi.NewMessage(user.ChatID, fmt.Sprintf("(Тестово) эта статья вам не подошла: %s", article.Title))
 	}
-	msg.ParseMode = "MarkdownV2"
 
+	msg.ParseMode = "MarkdownV2"
 	_, err := n.bot.Send(msg)
 	if err != nil {
+		log.Printf("Failed to send message to user %d: %v", user.ChatID, err)
 		return err
 	}
 	return nil
