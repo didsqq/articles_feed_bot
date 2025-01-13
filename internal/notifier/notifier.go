@@ -176,31 +176,25 @@ func (n *Notifier) sendArticle(user model.User, article model.Article, summary s
 	} else {
 		approach = true
 	}
-
+	var msg tgbotapi.MessageConfig
 	if approach {
 		const msgFormat = "*%s*%s\n\n%s"
 
-		msg := tgbotapi.NewMessage(user.ChatID, fmt.Sprintf(
+		msg = tgbotapi.NewMessage(user.ChatID, fmt.Sprintf(
 			msgFormat,
 			markup.EscapeForMarkdown(article.Title),
 			markup.EscapeForMarkdown(summary),
 			markup.EscapeForMarkdown(article.Link),
 		))
-		msg.ParseMode = "MarkdownV2"
 
-		_, err := n.bot.Send(msg)
-		if err != nil {
-			return err
-		}
 	} else {
-		msg := tgbotapi.NewMessage(user.ChatID, "[Тестово]эта статья вам не подошла")
-		msg.ParseMode = "MarkdownV2"
-
-		_, err := n.bot.Send(msg)
-		if err != nil {
-			return err
-		}
+		msg = tgbotapi.NewMessage(user.ChatID, fmt.Sprintf("(Тестово) эта статья вам не подошла: %s", article.Title))
 	}
+	msg.ParseMode = "MarkdownV2"
 
+	_, err := n.bot.Send(msg)
+	if err != nil {
+		return err
+	}
 	return nil
 }

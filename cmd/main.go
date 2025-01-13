@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/didsqq/news_feed_bot/internal/bot"
+	"github.com/didsqq/news_feed_bot/internal/bot/middleware"
 	"github.com/didsqq/news_feed_bot/internal/botkit"
 	"github.com/didsqq/news_feed_bot/internal/config"
 	"github.com/didsqq/news_feed_bot/internal/fetcher"
@@ -61,10 +62,34 @@ func main() {
 	)
 
 	newsBot := botkit.New(botAPI)
-	newsBot.RegisterCmdView("start", bot.ViewCmdStart(userStorage))
-	newsBot.RegisterCmdView("addsource", bot.ViewCmdAddSource(sourceStorage))
-	newsBot.RegisterCmdView("list", bot.ViewCmdListSources(sourceStorage))
-	newsBot.RegisterCmdView("deletesource", bot.ViewCmdDeleteSource(sourceStorage))
+	newsBot.RegisterCmdView(
+		"start",
+		middleware.AdminsOnly(
+			config.Get().TelegramChannelID,
+			bot.ViewCmdStart(userStorage),
+		),
+	)
+	newsBot.RegisterCmdView(
+		"addsource",
+		middleware.AdminsOnly(
+			config.Get().TelegramChannelID,
+			bot.ViewCmdAddSource(sourceStorage),
+		),
+	)
+	newsBot.RegisterCmdView(
+		"listsource",
+		middleware.AdminsOnly(
+			config.Get().TelegramChannelID,
+			bot.ViewCmdListSources(sourceStorage),
+		),
+	)
+	newsBot.RegisterCmdView(
+		"deletesource",
+		middleware.AdminsOnly(
+			config.Get().TelegramChannelID,
+			bot.ViewCmdDeleteSource(sourceStorage),
+		),
+	)
 
 	newsBot.RegisterCmdView("addkeys", bot.ViewCmdAddKeywords(userStorage))
 	newsBot.RegisterCmdView("getkeys", bot.ViewCmdGetKeywords(userStorage))
