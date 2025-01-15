@@ -45,7 +45,7 @@ func main() {
 			config.Get().FetchInterval,
 			config.Get().FilterKeywords,
 		)
-		summarizer = summary.NewOpenAISummarizer(
+		summarizer = summary.NewOpenAIProxySummarizer(
 			config.Get().OpenAIKey,
 			config.Get().OpenAIModel,
 			config.Get().OpenAIPrompt,

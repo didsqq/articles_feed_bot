@@ -138,6 +138,7 @@ func (n *Notifier) extractSummary(article model.Article) (string, error) {
 	} else {
 		resp, err := http.Get(article.Link)
 		if err != nil {
+			log.Printf("[ERROR] ошибка здесь http.Get(article.Link)")
 			return "", err
 		}
 		defer resp.Body.Close()
@@ -147,11 +148,13 @@ func (n *Notifier) extractSummary(article model.Article) (string, error) {
 
 	doc, err := readability.FromReader(r, nil)
 	if err != nil {
+		log.Printf("[ERROR] ошибка здесь readability.FromReader(r, nil)")
 		return "", err
 	}
 
 	summary, err := n.summarizer.Summarize(cleanupText(doc.TextContent))
 	if err != nil {
+		log.Printf("[ERROR] ошибка здесь n.summarizer.Summarize(cleanupText(doc.TextContent))")
 		return "", err
 	}
 
