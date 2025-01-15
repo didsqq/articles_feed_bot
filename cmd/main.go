@@ -40,17 +40,19 @@ func main() {
 		userStorage    = storage.NewUserStorage(db)
 		articleStorage = storage.NewArticleStorage(db)
 		sourceStorage  = storage.NewSourceStorage(db)
-		api            = api.NewOpenAIClient(config.Get().OpenAIKey)
-		fetcher        = fetcher.New(
+		api            = api.NewOpenAIClient(
+			config.Get().OpenAIKey,
+			config.Get().OpenAIPrompt,
+		)
+		fetcher = fetcher.New(
 			articleStorage,
 			sourceStorage,
 			config.Get().FetchInterval,
 			config.Get().FilterKeywords,
 		)
 		summarizer = summary.NewOpenAIProxySummarizer(
-			config.Get().OpenAIKey,
+			api,
 			config.Get().OpenAIModel,
-			config.Get().OpenAIPrompt,
 		)
 		notifier = notifier.New(
 			articleStorage,
