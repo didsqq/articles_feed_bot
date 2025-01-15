@@ -1,13 +1,13 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -46,17 +46,39 @@ type ResponseB struct {
 	Balance float64 `json:"balance"`
 }
 
+type RequestBody struct {
+	Model    string    `json:"model"`
+	Messages []Message `json:"messages"`
+}
+
+type Message struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
 func (c *OpenAIClient) GetCompletions(text string) (string, error) {
 	url := "https://api.proxyapi.ru/openai/v1/chat/completions"
 	method := "POST"
-	query := strings.NewReader(fmt.Sprintf(`{
-	  "model": "gpt-4o-mini",
-	  "messages": [{"role": "user", "content": "%s\n%s"}]
-  	}`, c.prompt, text))
+
+	requestBody := RequestBody{
+		Model: "gpt-4o-mini",
+		Messages: []Message{
+			{
+				Role:    "user",
+				Content: c.prompt + "\n" + text,
+			},
+		},
+	}
+
+	query, err := json.Marshal(requestBody)
+	if err != nil {
+		return "", err
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctx, method, url, query)
+	req, err := http.NewRequestWithContext(ctx, method, url, bytes.NewReader(query))
 	if err != nil {
 		return "", err
 	}
