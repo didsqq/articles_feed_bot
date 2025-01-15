@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/didsqq/news_feed_bot/internal/api"
 	"github.com/didsqq/news_feed_bot/internal/bot"
 	"github.com/didsqq/news_feed_bot/internal/bot/middleware"
 	"github.com/didsqq/news_feed_bot/internal/botkit"
@@ -39,6 +40,7 @@ func main() {
 		userStorage    = storage.NewUserStorage(db)
 		articleStorage = storage.NewArticleStorage(db)
 		sourceStorage  = storage.NewSourceStorage(db)
+		api            = api.NewOpenAIClient(config.Get().OpenAIKey)
 		fetcher        = fetcher.New(
 			articleStorage,
 			sourceStorage,
@@ -62,6 +64,14 @@ func main() {
 	)
 
 	newsBot := botkit.New(botAPI)
+
+	newsBot.RegisterCmdView(
+		"balance",
+		middleware.AdminsOnly(
+			config.Get().TelegramChannelID,
+			bot.ViewCmdGetBalance(api),
+		),
+	)
 	newsBot.RegisterCmdView(
 		"addsource",
 		middleware.AdminsOnly(
