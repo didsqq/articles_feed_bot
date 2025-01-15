@@ -63,13 +63,6 @@ func main() {
 
 	newsBot := botkit.New(botAPI)
 	newsBot.RegisterCmdView(
-		"start",
-		middleware.AdminsOnly(
-			config.Get().TelegramChannelID,
-			bot.ViewCmdStart(userStorage),
-		),
-	)
-	newsBot.RegisterCmdView(
 		"addsource",
 		middleware.AdminsOnly(
 			config.Get().TelegramChannelID,
@@ -91,6 +84,7 @@ func main() {
 		),
 	)
 
+	newsBot.RegisterCmdView("start", bot.ViewCmdStart(userStorage))
 	newsBot.RegisterCmdView("addkeys", bot.ViewCmdAddKeywords(userStorage))
 	newsBot.RegisterCmdView("getkeys", bot.ViewCmdGetKeywords(userStorage))
 	newsBot.RegisterCmdView("delete", bot.ViewCmdDeleteKeywords(userStorage))

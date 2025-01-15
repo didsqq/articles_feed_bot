@@ -69,14 +69,14 @@ func (s *OpenAIProxySummarizer) Summarize(text string) (string, error) {
 func (s *OpenAIProxySummarizer) GetCompletions(text string) (string, error) {
 	url := "https://api.proxyapi.ru/openai/v1/chat/completions"
 	method := "POST"
-	payload := strings.NewReader(fmt.Sprintf(`{
+	query := strings.NewReader(fmt.Sprintf(`{
 	  "model": "gpt-4o-mini",
 	  "messages": [{"role": "user", "content": "%s\n%s"}]
-  }`, s.prompt, text))
+  	}`, s.prompt, text))
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctx, method, url, payload)
+	req, err := http.NewRequestWithContext(ctx, method, url, query)
 	if err != nil {
 		log.Printf("[ERROR] ошибка здесь http.NewRequestWithContext(ctx, method, url, payload)")
 		return "", err

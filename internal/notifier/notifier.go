@@ -2,6 +2,7 @@ package notifier
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -101,33 +102,44 @@ func (n *Notifier) SelectAndSendArticle(ctx context.Context) error {
 	users, err := n.users.GetAll(ctx)
 	if err != nil {
 		log.Printf("[ERROR] failed to get users: %v", err)
+		return errors.New("failed to get users")
 	}
 
-	var errCh = make(chan error)
-	var wg sync.WaitGroup
-
-	for _, user := range users {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			err := n.sendArticle(user, article, summary)
-			if err != nil {
-				errCh <- err
-				return
-			}
-		}()
-	}
-
-	go func() {
-		wg.Wait()
-		close(errCh)
-	}()
+	var errCh = make(chan error, len(users)+1)
+	n.processUsers(users, article, summary, errCh)
 
 	for err := range errCh {
 		log.Printf("[ERROR] Ошибка при отправке article пользователю:%v", err)
 	}
 
 	return n.articles.MarkAsPosted(ctx, article)
+}
+
+func (n *Notifier) processUsers(users []model.User, article model.Article, summary string, errCh chan error) {
+	defer close(errCh)
+	var wg sync.WaitGroup
+	for _, user := range users {
+		wg.Add(1)
+		go func(user model.User) {
+			defer wg.Done()
+			err := n.sendArticle(user, article, summary)
+			if err != nil {
+				errCh <- err
+				return
+			}
+		}(user)
+	}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		err := n.sendArticle(model.User{ChatID: n.channelID, Keywords: []string{""}}, article, summary)
+		if err != nil {
+			errCh <- err
+			return
+		}
+	}()
+
+	wg.Wait()
 }
 
 func (n *Notifier) extractSummary(article model.Article) (string, error) {
