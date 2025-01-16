@@ -12,5 +12,12 @@ services:
     volumes:
       - db:/var/lib/postgresql/data/
 
+  app:
+    build:
+      context: .
+    restart: on-failure
+    depends_on:
+      - db
+
 volumes:
   db:
