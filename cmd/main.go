@@ -40,21 +40,21 @@ func main() {
 		userStorage    = storage.NewUserStorage(db)
 		articleStorage = storage.NewArticleStorage(db)
 		sourceStorage  = storage.NewSourceStorage(db)
-		api            = api.NewOpenAIClient(
+		openAIClient   = api.NewOpenAIClient(
 			config.Get().OpenAIKey,
 			config.Get().OpenAIPrompt,
 		)
-		fetcher = fetcher.New(
+		articleFetcher = fetcher.New(
 			articleStorage,
 			sourceStorage,
 			config.Get().FetchInterval,
 			config.Get().FilterKeywords,
 		)
 		summarizer = summary.NewOpenAIProxySummarizer(
-			api,
+			openAIClient,
 			config.Get().OpenAIModel,
 		)
-		notifier = notifier.New(
+		articleNotifier = notifier.New(
 			articleStorage,
 			userStorage,
 			summarizer,
@@ -71,7 +71,7 @@ func main() {
 		"balance",
 		middleware.AdminsOnly(
 			config.Get().TelegramChannelID,
-			bot.ViewCmdGetBalance(api),
+			bot.ViewCmdGetBalance(openAIClient),
 		),
 	)
 	newsBot.RegisterCmdView(
@@ -105,7 +105,7 @@ func main() {
 	defer cancel()
 
 	go func(ctx context.Context) {
-		if err := fetcher.Start(ctx); err != nil {
+		if err := articleFetcher.Start(ctx); err != nil {
 			if !errors.Is(err, context.Canceled) {
 				log.Printf("[ERROR] failed to start fetcher: %v", err)
 				return
@@ -115,7 +115,7 @@ func main() {
 	}(ctx)
 
 	go func(ctx context.Context) {
-		if err := notifier.Start(ctx); err != nil {
+		if err := articleNotifier.Start(ctx); err != nil {
 			if !errors.Is(err, context.Canceled) {
 				log.Printf("[ERROR] failed to run notifier: %v", err)
 				return
