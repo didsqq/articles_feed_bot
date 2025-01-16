@@ -15,21 +15,23 @@ type OpenAIClient struct {
 	client  *http.Client
 	apiKey  string
 	prompt  string
-	Enabled bool
+	model   string
+	enabled bool
 }
 
-func NewOpenAIClient(apiKey, prompt string) *OpenAIClient {
+func NewOpenAIClient(apiKey, prompt, model string) *OpenAIClient {
 	c := &OpenAIClient{
 		client: &http.Client{},
 		apiKey: apiKey,
 		prompt: prompt,
+		model:  model,
 	}
 
 	if apiKey != "" {
-		c.Enabled = true
+		c.enabled = true
 	}
 
-	log.Printf("openai client is enabled: %v", c.Enabled)
+	log.Printf("openai client is enabled: %v", c.enabled)
 
 	return c
 }
@@ -61,7 +63,7 @@ func (c *OpenAIClient) GetCompletions(text string) (string, error) {
 	method := "POST"
 
 	requestBody := RequestBody{
-		Model: "gpt-4o-mini",
+		Model: c.model,
 		Messages: []Message{
 			{
 				Role:    "user",
@@ -138,5 +140,5 @@ func (c *OpenAIClient) GetBalance() (float64, error) {
 }
 
 func (c *OpenAIClient) IsEnabled() bool {
-	return c.Enabled
+	return c.enabled
 }

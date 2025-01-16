@@ -144,13 +144,11 @@ func (n *Notifier) processUsers(users []model.User, article model.Article, summa
 
 func (n *Notifier) extractSummary(article model.Article) (string, error) {
 	var r io.Reader
-
 	if article.Summary != "" {
 		r = strings.NewReader(article.Summary)
 	} else {
 		resp, err := http.Get(article.Link)
 		if err != nil {
-			log.Printf("[ERROR] ошибка здесь http.Get(article.Link)")
 			return "", err
 		}
 		defer resp.Body.Close()
@@ -160,13 +158,11 @@ func (n *Notifier) extractSummary(article model.Article) (string, error) {
 
 	doc, err := readability.FromReader(r, nil)
 	if err != nil {
-		log.Printf("[ERROR] ошибка здесь readability.FromReader(r, nil)")
 		return "", err
 	}
 
 	summary, err := n.summarizer.Summarize(cleanupText(doc.TextContent))
 	if err != nil {
-		log.Printf("[ERROR] ошибка здесь n.summarizer.Summarize(cleanupText(doc.TextContent))")
 		return "", err
 	}
 
@@ -194,24 +190,22 @@ func (n *Notifier) filterKeywords(user model.User, article model.Article, summar
 
 func (n *Notifier) sendArticle(user model.User, article model.Article, summary string) error {
 	approach := n.filterKeywords(user, article, summary)
-	var msg tgbotapi.MessageConfig
+
 	if approach {
 		const msgFormat = "*%s*%s\n\n%s"
-		msg = tgbotapi.NewMessage(user.ChatID, fmt.Sprintf(
+		msg := tgbotapi.NewMessage(user.ChatID, fmt.Sprintf(
 			msgFormat,
 			markup.EscapeForMarkdown(article.Title),
 			markup.EscapeForMarkdown(summary),
 			markup.EscapeForMarkdown(article.Link),
 		))
-	} else {
-		msg = tgbotapi.NewMessage(user.ChatID, fmt.Sprintf("(Тестово) эта статья вам не подошла: %s", article.Title))
+		msg.ParseMode = "MarkdownV2"
+		_, err := n.bot.Send(msg)
+		if err != nil {
+			log.Printf("Failed to send message to user %d: %v", user.ChatID, err)
+			return err
+		}
 	}
 
-	msg.ParseMode = "MarkdownV2"
-	_, err := n.bot.Send(msg)
-	if err != nil {
-		log.Printf("Failed to send message to user %d: %v", user.ChatID, err)
-		return err
-	}
 	return nil
 }

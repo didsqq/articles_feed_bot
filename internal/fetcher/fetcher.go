@@ -49,6 +49,7 @@ func New(
 }
 
 func (f *Fetcher) Start(ctx context.Context) error {
+	log.Print("[INFO] fetcher start")
 	ticker := time.NewTicker(f.fetchInterval)
 	defer ticker.Stop()
 

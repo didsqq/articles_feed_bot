@@ -16,7 +16,6 @@ func AdminsOnly(channelID int64, next botkit.ViewFunc) botkit.ViewFunc {
 				},
 			},
 		)
-
 		if err != nil {
 			return err
 		}

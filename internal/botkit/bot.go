@@ -21,6 +21,7 @@ func New(api *tgbotapi.BotAPI) *Bot {
 }
 
 func (b *Bot) Run(ctx context.Context) error {
+	log.Print("[INFO] bot start")
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 

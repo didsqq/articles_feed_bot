@@ -43,6 +43,7 @@ func main() {
 		openAIClient   = api.NewOpenAIClient(
 			config.Get().OpenAIKey,
 			config.Get().OpenAIPrompt,
+			config.Get().OpenAIModel,
 		)
 		articleFetcher = fetcher.New(
 			articleStorage,
@@ -99,7 +100,8 @@ func main() {
 	newsBot.RegisterCmdView("start", bot.ViewCmdStart(userStorage))
 	newsBot.RegisterCmdView("addkeys", bot.ViewCmdAddKeywords(userStorage))
 	newsBot.RegisterCmdView("getkeys", bot.ViewCmdGetKeywords(userStorage))
-	newsBot.RegisterCmdView("delete", bot.ViewCmdDeleteKeywords(userStorage))
+	newsBot.RegisterCmdView("deletekeys", bot.ViewCmdDeleteKeywords(userStorage))
+	newsBot.RegisterCmdView("delete", bot.ViewCmdDeleteUser(userStorage))
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
@@ -125,6 +127,9 @@ func main() {
 	}(ctx)
 
 	if err := newsBot.Run(ctx); err != nil {
-		log.Printf("[ERROR] failed to run botkit: %v", err)
+		if !errors.Is(err, context.Canceled) {
+			log.Printf("[ERROR] failed to run botkit: %v", err)
+		}
+		log.Printf("[INFO] bot stopped")
 	}
 }

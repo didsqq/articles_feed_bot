@@ -31,7 +31,7 @@ func (s *UserPostgresStorage) GetAll(ctx context.Context) ([]model.User, error) 
 	defer conn.Close()
 
 	var users []dbUser
-	if err := conn.SelectContext(ctx, &users, `SELECT * FROM users`); err != nil {
+	if err := conn.SelectContext(ctx, &users, `SELECT * FROM users;`); err != nil {
 		return nil, err
 	}
 
@@ -50,7 +50,7 @@ func (s *UserPostgresStorage) Add(ctx context.Context, user model.User) error {
 	}
 	defer conn.Close()
 
-	if _, err := conn.ExecContext(ctx, `INSERT INTO users (chat_id, keywords) VALUES ($1, $2)`, user.ChatID, ""); err != nil {
+	if _, err := conn.ExecContext(ctx, `INSERT INTO users (chat_id, keywords) VALUES ($1, $2);`, user.ChatID, ""); err != nil {
 		return err
 	}
 
@@ -68,7 +68,7 @@ func (s *UserPostgresStorage) AddKeywords(ctx context.Context, user model.User) 
 		user.Keywords[i] = strings.ToLower(keyword)
 	}
 
-	if _, err := conn.ExecContext(ctx, `UPDATE users keywords = $1 WHERE chat_id = $2`,
+	if _, err := conn.ExecContext(ctx, `UPDATE users SET keywords = $1 WHERE chat_id = $2;`,
 		strings.Join(user.Keywords, ";"), user.ChatID); err != nil {
 		return err
 	}
@@ -83,11 +83,24 @@ func (s *UserPostgresStorage) GetKeywords(ctx context.Context, chatId int64) (st
 	}
 
 	var user dbUser
-	if err := conn.GetContext(ctx, &user, `SELECT * FROM users WHERE chat_id = $1`, chatId); err != nil {
+	if err := conn.GetContext(ctx, &user, `SELECT * FROM users WHERE chat_id = $1;`, chatId); err != nil {
 		return "", err
 	}
 
 	return user.Keywords, nil
+}
+
+func (s *UserPostgresStorage) DeleteKeywords(ctx context.Context, chatId int64) error {
+	conn, err := s.db.Connx(ctx)
+	if err != nil {
+		return err
+	}
+
+	if _, err := conn.ExecContext(ctx, `UPDATE users SET keywords = $1 WHERE chat_id = $2;`, "", chatId); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *UserPostgresStorage) Delete(ctx context.Context, chatId int64) error {
