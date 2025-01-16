@@ -22,16 +22,16 @@ type Config struct {
 }
 
 var (
-	cfg  Config    // глобальная переменная типа Config, которая будет содержать загруженную конфигурацию
-	once sync.Once // используется для того, чтобы гарантировать, что инициализация произойдет только один раз
+	cfg  Config
+	once sync.Once
 )
 
 func Get() Config {
 	once.Do(func() {
 		loader := aconfig.LoaderFor(&cfg, aconfig.Config{
-			EnvPrefix: "NFB", // переменные окружения начинающиеся с префикса NFB_
+			EnvPrefix: "RFB", // переменные окружения начинающиеся с префикса NFB_
 			Files:     []string{"./config.hcl", "./config.local.hcl", "$HOME/.config/news-feed-bot/config.hcl"},
-			FileDecoders: map[string]aconfig.FileDecoder{ // используется декодер aconfighcl
+			FileDecoders: map[string]aconfig.FileDecoder{
 				".hcl": aconfighcl.New(),
 			},
 		})
