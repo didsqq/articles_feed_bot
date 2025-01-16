@@ -9,14 +9,14 @@ Status: In development
 - User commands for managing keys
 ## Configuration
 ### Environment variables
-- `NFB_TELEGRAM_BOT_TOKEN` — token for Telegram Bot API
-- `NFB_TELEGRAM_CHANNEL_ID` — ID of the channel to post to, can be obtained via @JsonDumpBot
-- `NFB_DATABASE_DSN` — PostgreSQL connection string
-- `NFB_FETCH_INTERVAL` — the interval of checking for new articles, default 10m
-- `NFB_NOTIFICATION_INTERVAL` — the interval of delivering new articles to Telegram channel, default 1m
-- `NFB_FILTER_KEYWORDS` — comma separated list of words to skip articles containing these words
-- `NFB_OPENAI_KEY` — token for OpenAI API
-- `NFB_OPENAI_PROMPT` — prompt for GPT to generate summary
+- `AFB_TELEGRAM_BOT_TOKEN` — token for Telegram Bot API
+- `AFB_TELEGRAM_CHANNEL_ID` — ID of the channel to post to, can be obtained via @JsonDumpBot
+- `AFB_DATABASE_DSN` — PostgreSQL connection string
+- `AFB_FETCH_INTERVAL` — the interval of checking for new articles, default 10m
+- `AFB_NOTIFICATION_INTERVAL` — the interval of delivering new articles to Telegram channel, default 1m
+- `AFB_FILTER_KEYWORDS` — comma separated list of words to skip articles containing these words
+- `AFB_OPENAI_KEY` — token for OpenAI API
+- `AFB_OPENAI_PROMPT` — prompt for GPT to generate summary
 ### HCL
 News Feed Bot can be configured with HCL config file. The service is looking for config file in following locations:
 

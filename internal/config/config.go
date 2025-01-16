@@ -29,7 +29,7 @@ var (
 func Get() Config {
 	once.Do(func() {
 		loader := aconfig.LoaderFor(&cfg, aconfig.Config{
-			EnvPrefix: "RFB", // переменные окружения начинающиеся с префикса NFB_
+			EnvPrefix: "AFB", // переменные окружения начинающиеся с префикса NFB_
 			Files:     []string{"./config.hcl", "./config.local.hcl", "$HOME/.config/news-feed-bot/config.hcl"},
 			FileDecoders: map[string]aconfig.FileDecoder{
 				".hcl": aconfighcl.New(),
